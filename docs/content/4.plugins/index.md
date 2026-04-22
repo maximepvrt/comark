@@ -53,7 +53,7 @@ Comark's plugin system extends markdown functionality with specialized features.
   Convert plain-text punctuation into typographically correct Unicode characters
   ::
 
-  ::card{icon="i-lucide-corner-down-left" title="Breaks" to="/plugins/core/breaks"}
+  ::card{icon="i-lucide-corner-down-left" title="Breaks" to="/plugins/built-in/breaks"}
   Convert soft line breaks directly into `:br` components
   ::
 ::
