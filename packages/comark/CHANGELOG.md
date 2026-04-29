@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.2](https://github.com/comarkdown/comark/compare/comark@0.3.1...comark@0.3.2) (2026-04-29)
+
+### Bug Fixes
+
+* **highlight:** support binding `{{...}}` syntax ([0c465bf](https://github.com/comarkdown/comark/commit/0c465bf7c2ce3fcbf63cc5f68b566201fbad238b))
+* **stringify:** handle multiple paragraphs in a list item ([#169](https://github.com/comarkdown/comark/issues/169)) ([e9b9546](https://github.com/comarkdown/comark/commit/e9b9546698ac8ced0c223a62c5e08ba2973a50e4))
+
+### Performance
+
+* **plugins:** optimize highlight code processing ([#162](https://github.com/comarkdown/comark/issues/162)) ([eb56d5d](https://github.com/comarkdown/comark/commit/eb56d5d2e93714ff79771442b00903c65cd2add5))
+* **plugins:** optimize highlight to use codeToTokens fast path to skip hast intermediary ([#170](https://github.com/comarkdown/comark/issues/170)) ([e5b0843](https://github.com/comarkdown/comark/commit/e5b0843a2208bde7f3446003643d3078143b751b))
+
 ## [0.3.1](https://github.com/comarkdown/comark/compare/comark@0.3.0...comark@0.3.1) (2026-04-24)
 
 ## [0.3.0](https://github.com/comarkdown/comark/compare/comark@0.2.1...comark@0.3.0) (2026-04-24)
