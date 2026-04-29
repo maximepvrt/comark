@@ -149,7 +149,7 @@ async function registerDefaults(options: HighlightOptions) {
     else languages.push(result.value)
   }
   // Remove custom language after updating language in shiki core
-  languages.push(comakLanguage as LanguageRegistration)
+  languages.push(comakLanguage as LanguageRegistration[])
 
   return { themes, languages }
 }

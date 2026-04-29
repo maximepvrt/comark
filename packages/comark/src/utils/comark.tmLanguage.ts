@@ -55,6 +55,9 @@ const comark = {
     inline: {
       patterns: [
         {
+          include: '#binding',
+        },
+        {
           include: '#component_inline',
         },
         {
@@ -68,21 +71,43 @@ const comark = {
         },
       ],
     },
+    binding: {
+      match:
+        '(?x)\n  (\\{\\{)                       # opening braces\n  \\s*\n  ((?:[^|}]|\\|(?!\\|))+?)       # variable / dot-path\n  \\s*\n  (?:\n    (\\|\\|)                     # default operator\n    \\s*\n    ([^}]+?)                     # default value\n    \\s*\n  )?\n  (\\}\\})                        # closing braces',
+      name: 'meta.binding.mdc',
+      captures: {
+        '1': {
+          name: 'punctuation.section.embedded.begin.mdc',
+        },
+        '2': {
+          name: 'variable.other.mdc',
+        },
+        '3': {
+          name: 'keyword.operator.logical.mdc',
+        },
+        '4': {
+          name: 'string.unquoted.mdc',
+        },
+        '5': {
+          name: 'punctuation.section.embedded.end.mdc',
+        },
+      },
+    },
     span: {
       match:
         '(?x)\n  (\\[)           # Open\n    ([^]]*)\n  (\\])\n  (               # attributes\n    ({)\n      ([^{]*)\n    (})\n  )?\n  \\s',
       name: 'span.component.mdc',
       captures: {
-        1: {
+        '1': {
           name: 'punctuation.definition.tag.start.component',
         },
-        2: {
+        '2': {
           name: 'string.other.link.description.title.markdown',
         },
-        3: {
+        '3': {
           name: 'punctuation.definition.tag.end.component',
         },
-        4: {
+        '4': {
           patterns: [
             {
               include: '#attributes',
@@ -95,17 +120,17 @@ const comark = {
       match: '(?x)(               # attributes\n    ({)\n      ((?:[^{}\'"]+|\'[^\']*\'|"[^"]*")*)\n    (})\n  )',
       name: 'attributes.mdc',
       captures: {
-        1: {
+        '1': {
           name: 'punctuation.definition.tag.start.component',
         },
-        3: {
+        '3': {
           patterns: [
             {
               include: '#attribute',
             },
           ],
         },
-        4: {
+        '4': {
           name: 'punctuation.definition.tag.end.component',
         },
       },
@@ -115,34 +140,34 @@ const comark = {
         '(?x)\n  (^|\\G|\\s+)\n  (:)              # component colon\n  (?i:             # component name\n    (\\w[\\w\\d-]*)\n  )\n  (\n      (\\{(?:[^{}\'"]+|\'[^\']*\'|"[^"]*")*\\}) # attributes\n      (\\[[^\\]]*\\])?                          # slot\n    | (\\[[^\\]]*\\])                           # slot\n      (\\{(?:[^{}\'"]+|\'[^\']*\'|"[^"]*")*\\})? # attributes\n  )?\n  \\s',
       name: 'inline.component.mdc',
       captures: {
-        2: {
+        '2': {
           name: 'punctuation.definition.tag.start.component',
         },
-        3: {
+        '3': {
           name: 'entity.name.tag.component',
         },
-        5: {
+        '5': {
           patterns: [
             {
               include: '#attributes',
             },
           ],
         },
-        6: {
+        '6': {
           patterns: [
             {
               include: '#span',
             },
           ],
         },
-        7: {
+        '7': {
           patterns: [
             {
               include: '#span',
             },
           ],
         },
-        8: {
+        '8': {
           patterns: [
             {
               include: '#attributes',
@@ -157,13 +182,13 @@ const comark = {
       name: 'block.component.mdc',
       end: '(^|\\G)(\\2)(\\3)\\s*$',
       beginCaptures: {
-        3: {
+        '3': {
           name: 'punctuation.definition.tag.start.mdc',
         },
-        4: {
+        '4': {
           name: 'entity.name.tag.mdc',
         },
-        5: {
+        '5': {
           patterns: [
             {
               include: '#attributes',
@@ -172,7 +197,7 @@ const comark = {
         },
       },
       endCaptures: {
-        3: {
+        '3': {
           name: 'punctuation.definition.tag.end.mdc',
         },
       },
@@ -180,7 +205,7 @@ const comark = {
         {
           match: '(^|\\G)\\s*([:]{2,})$',
           captures: {
-            2: {
+            '2': {
               name: 'punctuation.definition.tag.end.mdc',
             },
           },
@@ -197,10 +222,10 @@ const comark = {
         {
           match: '^(\\s*)(#[\\w\\-\\_]*)\\s*(<!--(.*)-->)?$',
           captures: {
-            2: {
+            '2': {
               name: 'entity.other.attribute-name.html',
             },
-            3: {
+            '3': {
               name: 'comment.block.html',
             },
           },
@@ -216,10 +241,10 @@ const comark = {
           match:
             '(?x)\n  (\n    ([^=><\\s]*)  # attribute name\n    (             # attribute value\n        =["]([^"]*)(["])|[\']([^\']*)([\'])\n      | =[^\\s\'"}]*\n    )?\n    \\s*\n  )',
           captures: {
-            2: {
+            '2': {
               name: 'entity.other.attribute-name.html',
             },
-            3: {
+            '3': {
               patterns: [
                 {
                   include: '#attribute-interior',
@@ -235,7 +260,7 @@ const comark = {
         {
           begin: '=',
           beginCaptures: {
-            0: {
+            '0': {
               name: 'punctuation.separator.key-value.html',
             },
           },
@@ -248,13 +273,13 @@ const comark = {
             {
               begin: '"',
               beginCaptures: {
-                0: {
+                '0': {
                   name: 'punctuation.definition.string.begin.html',
                 },
               },
               end: '"',
               endCaptures: {
-                0: {
+                '0': {
                   name: 'punctuation.definition.string.end.html',
                 },
               },
@@ -268,13 +293,13 @@ const comark = {
             {
               begin: "'",
               beginCaptures: {
-                0: {
+                '0': {
                   name: 'punctuation.definition.string.begin.html',
                 },
               },
               end: "'",
               endCaptures: {
-                0: {
+                '0': {
                   name: 'punctuation.definition.string.end.html',
                 },
               },
@@ -297,10 +322,10 @@ const comark = {
       patterns: [
         {
           captures: {
-            1: {
+            '1': {
               name: 'punctuation.definition.entity.html',
             },
-            912: {
+            '912': {
               name: 'punctuation.definition.entity.html',
             },
           },
@@ -310,10 +335,10 @@ const comark = {
         },
         {
           captures: {
-            1: {
+            '1': {
               name: 'punctuation.definition.entity.html',
             },
-            3: {
+            '3': {
               name: 'punctuation.definition.entity.html',
             },
           },
@@ -322,10 +347,10 @@ const comark = {
         },
         {
           captures: {
-            1: {
+            '1': {
               name: 'punctuation.definition.entity.html',
             },
-            3: {
+            '3': {
               name: 'punctuation.definition.entity.html',
             },
           },
@@ -341,16 +366,16 @@ const comark = {
     heading: {
       match: '(?:^|\\G)[ ]*(#{1,6}\\s+(.*?)(\\s+#{1,6})?\\s*)$',
       captures: {
-        1: {
+        '1': {
           patterns: [
             {
               match: '(#{6})\\s+(.*?)(?:\\s+(#+))?\\s*$',
               name: 'heading.6.markdown',
               captures: {
-                1: {
+                '1': {
                   name: 'punctuation.definition.heading.markdown',
                 },
-                2: {
+                '2': {
                   name: 'entity.name.section.markdown',
                   patterns: [
                     {
@@ -361,7 +386,7 @@ const comark = {
                     },
                   ],
                 },
-                3: {
+                '3': {
                   name: 'punctuation.definition.heading.markdown',
                 },
               },
@@ -370,10 +395,10 @@ const comark = {
               match: '(#{5})\\s+(.*?)(?:\\s+(#+))?\\s*$',
               name: 'heading.5.markdown',
               captures: {
-                1: {
+                '1': {
                   name: 'punctuation.definition.heading.markdown',
                 },
-                2: {
+                '2': {
                   name: 'entity.name.section.markdown',
                   patterns: [
                     {
@@ -384,7 +409,7 @@ const comark = {
                     },
                   ],
                 },
-                3: {
+                '3': {
                   name: 'punctuation.definition.heading.markdown',
                 },
               },
@@ -393,10 +418,10 @@ const comark = {
               match: '(#{4})\\s+(.*?)(?:\\s+(#+))?\\s*$',
               name: 'heading.4.markdown',
               captures: {
-                1: {
+                '1': {
                   name: 'punctuation.definition.heading.markdown',
                 },
-                2: {
+                '2': {
                   name: 'entity.name.section.markdown',
                   patterns: [
                     {
@@ -407,7 +432,7 @@ const comark = {
                     },
                   ],
                 },
-                3: {
+                '3': {
                   name: 'punctuation.definition.heading.markdown',
                 },
               },
@@ -416,10 +441,10 @@ const comark = {
               match: '(#{3})\\s+(.*?)(?:\\s+(#+))?\\s*$',
               name: 'heading.3.markdown',
               captures: {
-                1: {
+                '1': {
                   name: 'punctuation.definition.heading.markdown',
                 },
-                2: {
+                '2': {
                   name: 'entity.name.section.markdown',
                   patterns: [
                     {
@@ -430,7 +455,7 @@ const comark = {
                     },
                   ],
                 },
-                3: {
+                '3': {
                   name: 'punctuation.definition.heading.markdown',
                 },
               },
@@ -439,10 +464,10 @@ const comark = {
               match: '(#{2})\\s+(.*?)(?:\\s+(#+))?\\s*$',
               name: 'heading.2.markdown',
               captures: {
-                1: {
+                '1': {
                   name: 'punctuation.definition.heading.markdown',
                 },
-                2: {
+                '2': {
                   name: 'entity.name.section.markdown',
                   patterns: [
                     {
@@ -453,7 +478,7 @@ const comark = {
                     },
                   ],
                 },
-                3: {
+                '3': {
                   name: 'punctuation.definition.heading.markdown',
                 },
               },
@@ -462,10 +487,10 @@ const comark = {
               match: '(#{1})\\s+(.*?)(?:\\s+(#+))?\\s*$',
               name: 'heading.1.markdown',
               captures: {
-                1: {
+                '1': {
                   name: 'punctuation.definition.heading.markdown',
                 },
-                2: {
+                '2': {
                   name: 'entity.name.section.markdown',
                   patterns: [
                     {
@@ -476,7 +501,7 @@ const comark = {
                     },
                   ],
                 },
-                3: {
+                '3': {
                   name: 'punctuation.definition.heading.markdown',
                 },
               },
@@ -508,7 +533,7 @@ const comark = {
         {
           begin: '(^|\\G)([ ]*)([*+-])([ \\t])',
           beginCaptures: {
-            3: {
+            '3': {
               name: 'punctuation.definition.list.begin.markdown',
             },
           },
@@ -526,7 +551,7 @@ const comark = {
         {
           begin: '(^|\\G)([ ]*)([0-9]+\\.)([ \\t])',
           beginCaptures: {
-            3: {
+            '3': {
               name: 'punctuation.definition.list.begin.markdown',
             },
           },
@@ -562,7 +587,7 @@ const comark = {
     blockquote: {
       begin: '(^|\\G)[ ]*(>) ?',
       captures: {
-        2: {
+        '2': {
           name: 'punctuation.definition.quote.begin.markdown',
         },
       },
