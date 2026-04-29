@@ -1,10 +1,10 @@
-import { createParse } from '@comark/vue/parse'
-import highlight from '@comark/vue/plugins/highlight'
-import mermaid from '@comark/vue/plugins/mermaid'
+import { createParse } from '@comark/nuxt/parse'
+import highlight from '@comark/nuxt/plugins/highlight'
+import mermaid from '@comark/nuxt/plugins/mermaid'
 import latexLanguage from '@shikijs/langs/latex'
-import emoji from '@comark/vue/plugins/emoji'
-import toc from '@comark/vue/plugins/toc'
-import headings from '@comark/vue/plugins/headings'
+import emoji from '@comark/nuxt/plugins/emoji'
+import toc from '@comark/nuxt/plugins/toc'
+import headings from '@comark/nuxt/plugins/headings'
 
 import { defineTransformer } from '@nuxt/content'
 

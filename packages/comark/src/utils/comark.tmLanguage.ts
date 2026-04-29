@@ -1,4 +1,8 @@
-export default {
+import markdown from 'shiki/dist/langs/markdown.mjs'
+import yaml from 'shiki/dist/langs/yaml.mjs'
+import html_derivative from 'shiki/dist/langs/html-derivative.mjs'
+
+const comark = {
   $schema: 'https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json',
   name: 'mdc',
   aliases: ['comark'],
@@ -572,3 +576,5 @@ export default {
     },
   },
 }
+
+export default [...markdown, ...yaml, ...html_derivative, comark]
