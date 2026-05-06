@@ -273,6 +273,11 @@ overrides:
   comark: workspace:*
   vue: ^3.5.32
 
+patchedDependencies:
+  minimark:
+    hash: 1e0eaaab5c9ffee4dcf68d6e89d35546917e9c8033757789e7675f1a2ea323a9
+    path: patches/minimark.patch
+
 importers:
 
   .:
@@ -984,7 +989,7 @@ importers:
         version: 3.0.1
       minimark:
         specifier: 'catalog:'
-        version: 0.2.0
+        version: 0.2.0(patch_hash=1e0eaaab5c9ffee4dcf68d6e89d35546917e9c8033757789e7675f1a2ea323a9)
       tsx:
         specifier: 'catalog:'
         version: 4.21.0
@@ -11846,7 +11851,7 @@ snapshots:
       micromark-util-resolve-all: 2.0.1
       micromark-util-sanitize-uri: 2.0.1
       micromatch: 4.0.8
-      minimark: 0.2.0
+      minimark: 0.2.0(patch_hash=1e0eaaab5c9ffee4dcf68d6e89d35546917e9c8033757789e7675f1a2ea323a9)
       minimatch: 10.2.5
       nuxt-component-meta: 0.17.2(magicast@0.5.2)
       nypm: 0.6.6
@@ -17725,7 +17730,7 @@ snapshots:
 
   mimic-response@3.1.0: {}
 
-  minimark@0.2.0: {}
+  minimark@0.2.0(patch_hash=1e0eaaab5c9ffee4dcf68d6e89d35546917e9c8033757789e7675f1a2ea323a9): {}
 
   minimatch@10.2.5:
     dependencies:

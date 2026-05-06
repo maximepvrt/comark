@@ -6,6 +6,9 @@ packages:
 ignoredBuiltDependencies:
   - sharp
 
+patchedDependencies:
+  minimark: patches/minimark.patch
+
 catalog:
   # Workspace packages (publish versions, locally overridden by resolutions)
   comark: ^0.3.1
