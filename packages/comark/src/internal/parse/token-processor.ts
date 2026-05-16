@@ -48,6 +48,20 @@ export function marmdownItTokensToComarkTree(
   let i = 0
   let endLine = options.startLine
   while (i < tokens.length) {
+    const token = tokens[i]
+
+    // An html_block whose own content already closes its outer element
+    // (e.g. `<p><img></p>`, `<div>foo</div>`, `<img>`, `<!-- ... -->`) has no
+    // paired html_block_close later in the stream.
+    if (token.type === 'html_block' && htmlBlockHasOwnClose(token.content || '')) {
+      const htmlNodes = htmlToComarkNodes(token.content || '')
+      for (const htmlNode of htmlNodes) {
+        nodes.push(htmlNode)
+      }
+      i++
+      continue
+    }
+
     const result = processBlockToken(tokens, i, false, state)
     if (result.node) {
       if (options.preservePositions) {
@@ -67,6 +81,24 @@ export function marmdownItTokensToComarkTree(
   }
 
   return nodes
+}
+
+/**
+ * Whether an `html_block` token's content already closes its own outer element.
+ * The block tokeniser only emits an `html_block_close` for lines that begin with
+ * `</`, so any block whose closer sits on the opener's line (`<p><img></p>`),
+ * including void elements and comments, has no companion close token.
+ */
+function htmlBlockHasOwnClose(content: string): boolean {
+  const trimmed = content.trim()
+  if (!trimmed) return false
+  // Comments, declarations, CDATA, processing instructions: self-terminating.
+  if (trimmed.startsWith('<!') || trimmed.startsWith('<?')) return true
+  const match = trimmed.match(/^<\s*([a-zA-Z][a-zA-Z0-9]*)/)
+  if (!match) return false
+  const tag = match[1]
+  if (VOID_ELEMENTS.has(tag.toLowerCase())) return true
+  return new RegExp(`</\\s*${tag}\\s*>`, 'i').test(trimmed)
 }
 
 /**
@@ -289,18 +321,11 @@ function processBlockToken(
       return { node: [null, {}, inner] as unknown as ComarkNode, nextIndex: startIndex + 1 }
     }
 
-    const htmlNodes = htmlToComarkNodes(content)
-    const [node1] = htmlNodes
+    const children = processBlockChildren(tokens, startIndex + 1, 'html_block_close', false, false, false, state)
+    const [node1] = htmlToComarkNodes(content)
     if (!node1) {
       return { node: null, nextIndex: startIndex + 1 }
     }
-
-    const isVoid = Array.isArray(node1) && VOID_ELEMENTS.has(node1[0] as string)
-    if (isVoid) {
-      return { node: node1, nextIndex: startIndex + 1 }
-    }
-
-    const children = processBlockChildren(tokens, startIndex + 1, 'html_block_close', false, false, false, state)
     const node = [node1[0]!, node1[1]! as ComarkElementAttributes, ...children.nodes] as ComarkNode
 
     return { node, nextIndex: children.nextIndex + 1 }
