@@ -359,7 +359,7 @@ export type ResolvedFrontmatter<T> = [keyof T] extends [never] ? Record<string, 
 
 // #endregion
 
-export type ComponentManifest = (name: string) => Promise<unknown> | undefined | null
+export type ComponentManifest = (name: string) => unknown | Promise<unknown> | undefined | null
 export interface ComarkContextProvider {
   components: Record<string, any>
   componentManifest: ComponentManifest

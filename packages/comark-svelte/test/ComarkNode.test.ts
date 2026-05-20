@@ -3,7 +3,9 @@ import { render } from 'svelte/server'
 import { parse } from 'comark'
 import ComarkRenderer from '../src/components/ComarkRenderer.svelte'
 import ComarkNode from '../src/components/ComarkNode.svelte'
+import ComarkAsync from '../src/async/ComarkAsync.svelte'
 import Alert from './test-components/Alert.svelte'
+import Card from './test-components/Card.svelte'
 import ProseH1 from './test-components/ProseH1.svelte'
 
 /** Strip Svelte SSR hydration comments from rendered HTML */
@@ -243,6 +245,70 @@ describe('custom components', () => {
     expect(output).toContain('<div class="alert alert-info" role="alert">')
     expect(output).toContain('<strong>Bold</strong>')
     expect(output).toContain(' text')
+  })
+
+  it('resolves eager componentsManifest entries during SSR', async () => {
+    const tree = await parse('::alert{type="warning"}\nLazy content\n::')
+    const { body } = render(ComarkRenderer, {
+      props: {
+        tree,
+        componentsManifest: (name: string) => {
+          if (name === 'alert') {
+            return { default: Alert }
+          }
+        },
+      },
+    })
+    const output = html(body)
+    expect(output).toContain('<div class="alert alert-warning" role="alert">')
+    expect(output).toContain('Lazy content')
+  })
+
+  it('resolves async componentsManifest entries during ComarkAsync SSR', async () => {
+    const { body } = await render(ComarkAsync, {
+      props: {
+        markdown: '::card{title="Async" variant="warning"}\nLazy content\n::',
+        componentsManifest: (name: string) => {
+          if (name === 'card') {
+            return Promise.resolve({ default: Card })
+          }
+        },
+      },
+    })
+    const output = html(body)
+    expect(output).toContain('<div class="card card-warning">')
+    expect(output).toContain('<h3>Async</h3>')
+    expect(output).toContain('Lazy content')
+  })
+
+  it('keeps componentsManifest caches isolated by manifest function', async () => {
+    await render(ComarkAsync, {
+      props: {
+        markdown: '::card{title="Async" variant="warning"}\nAsync content\n::',
+        componentsManifest: (name: string) => {
+          if (name === 'card') {
+            return Promise.resolve({ default: Card })
+          }
+        },
+      },
+    })
+
+    const tree = await parse('::card{title="Eager" variant="primary"}\nEager content\n::')
+    const { body } = render(ComarkRenderer, {
+      props: {
+        tree,
+        componentsManifest: (name: string) => {
+          if (name === 'card') {
+            return { default: Card }
+          }
+        },
+      },
+    })
+
+    const output = html(body)
+    expect(output).toContain('<div class="card card-primary">')
+    expect(output).toContain('<h3>Eager</h3>')
+    expect(output).toContain('Eager content')
   })
 
   it('falls back to native element when no component matches', async () => {

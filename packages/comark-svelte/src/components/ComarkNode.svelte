@@ -14,10 +14,64 @@ naturally appears inline after the deepest trailing text node.
 <ComarkNode node={astNode} components={{ alert: Alert }} />
 ```
 -->
+<script module lang="ts">
+  import type { ComponentManifest as ComarkComponentManifest } from 'comark'
+  import { pascalCase } from 'comark/utils'
+
+  const componentCache = new WeakMap<ComarkComponentManifest, Map<string, any>>()
+
+  function isPromiseLike(value: unknown): value is Promise<unknown> {
+    return !!value && typeof (value as { then?: unknown }).then === 'function'
+  }
+
+  function unwrapComponent(mod: unknown): any {
+    return mod && typeof mod === 'object' && 'default' in mod
+      ? (mod as { default?: any }).default
+      : mod
+  }
+
+  function resolveComponent(tag: string, components: Record<string, any>, componentsManifest?: ComarkComponentManifest): any {
+    const pascal = pascalCase(tag)
+    const Component
+      = components[`Prose${pascal}`]
+        || components[pascal]
+        || components[tag]
+
+    if (Component) {
+      return Component
+    }
+    if (!componentsManifest) {
+      return null;
+    }
+
+    let cache = componentCache.get(componentsManifest)
+    if (!cache) {
+      cache = new Map<string, any>()
+      componentCache.set(componentsManifest, cache)
+    }
+
+    if (!cache.has(tag)) {
+      const resolved = componentsManifest(tag)
+      if (resolved) {
+        cache.set(
+          tag,
+          isPromiseLike(resolved)
+            ? Promise.resolve(resolved).then(unwrapComponent)
+            : unwrapComponent(resolved),
+        )
+      }
+    }
+
+    return cache.get(tag) || null
+  }
+</script>
+
 <script lang="ts">
   import type { ComarkNode as ComarkNodeType, ComponentManifest, NodeRenderData } from 'comark'
+  import type { ComponentResolver } from '../types.js'
   import ComarkNode from './ComarkNode.svelte'
-  import { pascalCase, resolveAttributes } from 'comark/utils'
+  import Resolve from './Resolve.svelte'
+  import { resolveAttributes } from 'comark/utils'
 
   const EMPTY_RENDER_DATA: NodeRenderData = { frontmatter: {}, meta: {}, data: {}, props: {} }
 
@@ -25,12 +79,14 @@ naturally appears inline after the deepest trailing text node.
     node,
     components = {},
     componentsManifest,
+    resolver: Resolver = Resolve,
     caretClass = null,
     renderData = EMPTY_RENDER_DATA,
   }: {
     node: ComarkNodeType
     components?: Record<string, any>
     componentsManifest?: ComponentManifest
+    resolver?: ComponentResolver
     caretClass?: string | null
     renderData?: NodeRenderData
   } = $props()
@@ -44,26 +100,26 @@ naturally appears inline after the deepest trailing text node.
     'link', 'meta', 'param', 'source', 'track', 'wbr',
   ])
 
-  let { isText, tag, isVoid, children, Component, mappedProps } = $derived.by(() => {
+  let { isText, tag, isVoid, children, Component, componentPromise, mappedProps } = $derived.by(() => {
     let isText = false
     let tag: string | null = null
     let isVoid = false
     let children: ComarkNodeType[] = []
     let Component: any = null
+    let componentPromise: Promise<any> | null = null
     let mappedProps: Record<string, any> = {}
 
     if (typeof node === 'string') {
-      isText = true
-      return { isText, tag, isVoid, children, Component, mappedProps }
+      return { isText: true, tag, isVoid, children, Component, componentPromise, mappedProps }
     }
 
     if (!Array.isArray(node) || node.length < 1) {
-      return { isText, tag, isVoid, children, Component, mappedProps }
+      return { isText, tag, isVoid, children, Component, componentPromise, mappedProps }
     }
 
     // Comment nodes have null as the tag
     if (node[0] === null) {
-      return { isText, tag, isVoid, children, Component, mappedProps }
+      return { isText, tag, isVoid, children, Component, componentPromise, mappedProps }
     }
 
     tag = node[0] as string
@@ -72,13 +128,13 @@ naturally appears inline after the deepest trailing text node.
       = (node.length >= 2 ? node[1] : {}) ?? {}
     children = node.length > 2 ? (node.slice(2) as ComarkNodeType[]) : []
 
-    // Resolve custom component: check Prose{PascalTag}, PascalTag, then raw tag
-    const pascal = pascalCase(tag)
-    Component
-      = components[`Prose${pascal}`]
-        || components[pascal]
-        || components[tag]
-        || null
+    const resolvedComponent = resolveComponent(tag, components, componentsManifest)
+    if (resolvedComponent instanceof Promise) {
+      componentPromise = resolvedComponent
+    }
+    else {
+      Component = resolvedComponent
+    }
 
     // Resolve `:prefix` bindings, then apply Svelte attribute remapping
     // (`className` → `class`).
@@ -92,7 +148,7 @@ naturally appears inline after the deepest trailing text node.
       }
     }
 
-    return { isText, tag, isVoid, children, Component, mappedProps }
+    return { isText, tag, isVoid, children, Component, componentPromise, mappedProps }
   })
 
   // Only shadow the parent's `props` scope when the current element has its
@@ -105,6 +161,19 @@ naturally appears inline after the deepest trailing text node.
   )
 </script>
 
+{#snippet renderChildren()}
+  {#each children as child, i (i)}
+    <ComarkNode
+      node={child}
+      {components}
+      {componentsManifest}
+      resolver={Resolver}
+      caretClass={i === children.length - 1 ? caretClass : null}
+      renderData={childrenRenderData}
+    />
+  {/each}
+{/snippet}
+
 {#if isText}
   {node}{#if caretClass !== null}<span
       class={caretClass || undefined}
@@ -112,28 +181,16 @@ naturally appears inline after the deepest trailing text node.
     >{/if}
 {:else if Component}
   <Component {...mappedProps}>
-    {#each children as child, i (i)}
-      <ComarkNode
-        node={child}
-        {components}
-        {componentsManifest}
-        caretClass={i === children.length - 1 ? caretClass : null}
-        renderData={childrenRenderData}
-      />
-    {/each}
+    {@render renderChildren()}
   </Component>
+{:else if componentPromise}
+  <Resolver promise={componentPromise} props={mappedProps}>
+    {@render renderChildren()}
+  </Resolver>
 {:else if isVoid}
   <svelte:element this={tag} {...mappedProps} />
 {:else if tag}
   <svelte:element this={tag} {...mappedProps}>
-    {#each children as child, i (i)}
-      <ComarkNode
-        node={child}
-        {components}
-        {componentsManifest}
-        caretClass={i === children.length - 1 ? caretClass : null}
-        renderData={childrenRenderData}
-      />
-    {/each}
+    {@render renderChildren()}
   </svelte:element>
 {/if}

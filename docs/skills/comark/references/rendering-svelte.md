@@ -48,9 +48,9 @@ Map custom Svelte components to Comark elements:
 ```svelte
 <script lang="ts">
   import { Comark } from '@comark/svelte'
-  import CustomHeading from './CustomHeading.svelte'
-  import CustomAlert from './CustomAlert.svelte'
-  import CustomCard from './CustomCard.svelte'
+  import CustomHeading from './components/comark/CustomHeading.svelte'
+  import CustomAlert from './components/comark/CustomAlert.svelte'
+  import CustomCard from './components/comark/CustomCard.svelte'
 
   const customComponents = {
     h1: CustomHeading,
@@ -127,9 +127,9 @@ Load components dynamically using `componentsManifest`:
   import { Comark } from '@comark/svelte'
 
   const componentMap: Record<string, () => Promise<any>> = {
-    'alert': () => import('./Alert.svelte'),
-    'card': () => import('./Card.svelte'),
-    'button': () => import('./Button.svelte'),
+    'alert': () => import('./components/comark/Alert.svelte'),
+    'card': () => import('./components/comark/Card.svelte'),
+    'button': () => import('./components/comark/Button.svelte'),
   }
 
   async function loadComponent(name: string) {
@@ -143,6 +143,50 @@ Load components dynamically using `componentsManifest`:
 
 <Comark markdown={content} componentsManifest={loadComponent} />
 ```
+
+In SvelteKit projects, keep components rendered from Markdown in a dedicated folder such as `$lib/components/comark/`. This keeps Comark-rendered components separate from normal app UI components and makes `componentsManifest` globs easier to audit.
+
+For SvelteKit SSR with non-eager lazy components, use `ComarkAsync` and a manifest that returns dynamic imports. An explicit map is the easiest option to audit:
+
+```svelte
+<script lang="ts">
+  import { ComarkAsync } from '@comark/svelte/async'
+
+  const componentMap: Record<string, () => Promise<any>> = {
+    'alert': () => import('$lib/components/comark/Alert.svelte'),
+    'lazy-card': () => import('$lib/components/comark/LazyCard.svelte'),
+  }
+
+  const componentsManifest = (name: string) => componentMap[name]?.()
+</script>
+
+<svelte:boundary>
+  <ComarkAsync markdown={content} {componentsManifest} />
+</svelte:boundary>
+```
+
+Use `import.meta.glob` when you want the manifest to cover every Svelte component in a folder:
+
+```svelte
+<script lang="ts">
+  import { ComarkAsync } from '@comark/svelte/async'
+  import { pascalCase } from '@comark/svelte/utils'
+
+  const modules = import.meta.glob('../lib/components/comark/*.svelte')
+
+  const componentsManifest = (name: string) => {
+    return modules[`../lib/components/comark/${pascalCase(name)}.svelte`]?.()
+  }
+</script>
+
+<svelte:boundary>
+  <ComarkAsync markdown={content} {componentsManifest} />
+</svelte:boundary>
+```
+
+Omit the boundary `pending` snippet when you want SvelteKit SSR to wait and include the resolved lazy components in the initial HTML.
+
+Use eager/static components with `ComarkRenderer` when you need stable SSR without Svelte's experimental async support.
 
 ---
 
@@ -319,7 +363,7 @@ Override native HTML elements using the `Prose` prefix:
 
 ## Experimental Async
 
-The `ComarkAsync` component uses Svelte's experimental `await` in `$derived` for a declarative approach. Requires `experimental.async` in your Svelte config:
+The `ComarkAsync` component uses Svelte's experimental `await` in `$derived` for a declarative approach. It can also await async `componentsManifest` entries during SSR, so lazy dynamic imports render into SvelteKit server HTML. Requires `experimental.async` in your Svelte config:
 
 ```js
 // svelte.config.js
