@@ -1,6 +1,7 @@
 import type { State } from 'comark/render'
 import type { ComarkElement, ComarkNode } from 'comark'
 import { indent } from '../../../utils/index.ts'
+import { comarkAttributes, userBlockAttrs } from '../attributes.ts'
 
 // Block elements that need explicit indentation in list items.
 // Note: ol/ul are handled by their own handlers which manage indentation via listIndent context.
@@ -47,6 +48,9 @@ export async function li(node: ComarkElement, state: State) {
   }
   result = result.trim()
 
+  const attrs = comarkAttributes(userBlockAttrs('li', node[1] as Record<string, unknown>))
+  const suffix = attrs ? ` ${attrs}` : ''
+
   if (!order) {
     result = escapeLeadingNumberDot(result)
   }
@@ -55,7 +59,7 @@ export async function li(node: ComarkElement, state: State) {
     state.applyContext({ order: order + 1 })
   }
 
-  return `${prefix}${result}\n`
+  return `${prefix}${result}${suffix}\n`
 }
 
 function escapeLeadingNumberDot(str: string): string {

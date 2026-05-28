@@ -92,6 +92,58 @@ export function resolveAttribute(attrs: Record<string, unknown>, renderData: Nod
   return attrs[key]
 }
 
+// Implicit attributes the parser injects per tag — they're conveyed by the
+// native markdown syntax (e.g. `as` becomes `> [!NOTE]`, `task-list-item`
+// is implicit in `- [ ]`) so they should not echo back as user attrs.
+const IMPLICIT_ATTRS: Record<string, { drop?: string[]; classBlocklist?: string[] }> = {
+  blockquote: { drop: ['as'] },
+  ul: { classBlocklist: ['contains-task-list'] },
+  li: { classBlocklist: ['task-list-item'] },
+  // `language`/`filename`/`highlights`/`meta` ride on the fence info string.
+  // `tabindex`/`style` come from render-time plugins (e.g. shiki) and have no
+  // markdown form. `class` is handled specially in userBlockAttrs because shiki
+  // merges its injected classes with the user's class — we need to strip just
+  // the highlighter portion.
+  pre: { drop: ['language', 'filename', 'highlights', 'meta', 'tabindex', 'style'] },
+}
+
+/**
+ * Filter implicit/auto-generated attrs that are encoded by the native
+ * markdown syntax and shouldn't echo back as `{attr=...}`. Used by the
+ * block stringifiers to decide whether a node has *user* attrs that must
+ * be preserved via the `::tag{...}` wrapper form.
+ */
+export function userBlockAttrs(tag: string, attributes: Record<string, unknown>): Record<string, unknown> {
+  const rule = IMPLICIT_ATTRS[tag]
+  if (!rule) return { ...attributes }
+
+  const result: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(attributes)) {
+    if (rule.drop?.includes(key)) continue
+    if (key === 'class' && rule.classBlocklist && typeof value === 'string') {
+      const remaining = value
+        .split(/\s+/)
+        .filter((c) => c && !rule.classBlocklist!.includes(c))
+        .join(' ')
+      if (remaining) result[key] = remaining
+      continue
+    }
+    if (key === 'class' && tag === 'pre' && typeof value === 'string' && value.startsWith('shiki ')) {
+      // Shiki injects `shiki [shiki-themes] <themes…> dark:<theme>` and any
+      // user-supplied class is appended after it. Recover the user portion by
+      // dropping everything up to and including the first `dark:*` token.
+      const tokens = value.split(/\s+/)
+      let cutoff = tokens.findIndex((t) => t === '.')
+
+      const userClass = cutoff >= 0 ? tokens.slice(cutoff + 1).join(' ') : ''
+      if (userClass) result[key] = userClass
+      continue
+    }
+    result[key] = value
+  }
+  return result
+}
+
 /**
  * Convert attributes to a string of Comark attributes
  *

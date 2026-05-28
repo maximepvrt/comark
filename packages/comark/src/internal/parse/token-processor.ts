@@ -1,5 +1,8 @@
-import type { ComarkNode } from 'comark'
+import type { ComarkElement, ComarkNode } from 'comark'
 import { htmlToComarkNodes, parseInlineHtmlTag } from './html/index.ts'
+
+// `::tag` components that should fold into a single same-tagged child.
+const WRAPPER_TAGS = new Set(['ul', 'ol', 'table', 'blockquote', 'pre'])
 
 // Mapping from token types to tag names
 const BLOCK_TAG_MAP: Record<string, string> = {
@@ -307,6 +310,24 @@ function processBlockToken(
     const attrs = processAttributes(token.attrs)
     // Process children until mdc_block_close, handling slots (#slotname)
     const children = processBlockChildrenWithSlots(tokens, startIndex + 1, 'mdc_block_close', state)
+
+    // `::ul`/`::ol`/`::table`/`::blockquote`/`::pre` wrapping a single same-tag
+    // child collapses into a single element with the wrapper's attrs (outer wins).
+    if (
+      WRAPPER_TAGS.has(componentName) &&
+      children.nodes.length === 1 &&
+      Array.isArray(children.nodes[0]) &&
+      children.nodes[0][0] === componentName
+    ) {
+      const inner = children.nodes[0] as ComarkElement
+      const innerAttrs = inner[1] as Record<string, unknown>
+      const innerChildren = inner.slice(2) as ComarkNode[]
+      return {
+        node: [componentName, { ...innerAttrs, ...attrs }, ...innerChildren] as ComarkNode,
+        nextIndex: children.nextIndex + 1,
+      }
+    }
+
     // Return the component even if it has no children (empty component like ::component\n::)
     return { node: [componentName, attrs, ...children.nodes] as ComarkNode, nextIndex: children.nextIndex + 1 }
   }
@@ -385,6 +406,7 @@ function processBlockToken(
   if (token.type === 'heading_open') {
     const level = Number.parseInt(token.tag.replace('h', ''), 10)
     const headingTag = `h${level}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+    const userAttrs = processAttributes(token.attrs, { handleBoolean: false, handleJSON: false })
     // Process heading children with inHeading flag for Comark component handling
     const children = processBlockChildren(
       tokens,
@@ -400,9 +422,11 @@ function processBlockToken(
       const textContent = extractTextContent(children.nodes)
       const headingId = uniqueSlug(slugify(textContent), level, state)
 
-      // Always attach ID to the heading element itself
+      // Merge user-supplied attrs with the auto-generated id; user `id` wins.
+      const attrs: Record<string, unknown> = { id: headingId, ...userAttrs }
+
       return {
-        node: [headingTag, { id: headingId }, ...children.nodes] as ComarkNode,
+        node: [headingTag, attrs, ...children.nodes] as ComarkNode,
         nextIndex: children.nextIndex + 1,
       }
     }
