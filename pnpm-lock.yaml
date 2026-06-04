@@ -479,6 +479,9 @@ importers:
 
   examples/1.frameworks/nextjs:
     dependencies:
+      '@comark/react':
+        specifier: workspace:*
+        version: link:../../../packages/comark-react
       comark:
         specifier: workspace:*
         version: link:../../../packages/comark
