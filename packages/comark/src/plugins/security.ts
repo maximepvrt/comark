@@ -1,5 +1,4 @@
 import type { ComarkElement } from 'comark'
-import { renderMarkdown } from 'comark/render'
 import { defineComarkPlugin } from '../utils/helpers.ts'
 import { visit } from '../utils/index.ts'
 import { validateProps } from '../internal/props-validation.ts'
