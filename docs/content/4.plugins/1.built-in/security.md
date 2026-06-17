@@ -165,6 +165,16 @@ security({
 | `base` | Changes base URL for relative links |
 | `meta` | HTTP refresh / redirect |
 
+### `allowedTags`
+
+Tag names to exclusively keep in the AST. Matching is case-insensitive, so, so `SPAN`, `Span`, and `span` are all caught.
+
+```typescript
+security({
+  allowedTags: ['p', 'span', 'ul', 'li', 'ol', 'strong']
+})
+```
+
 ### `allowedProtocols`
 
 Restricts which URL protocols are permitted in `href` and `src` attributes. Use `['*']` to allow all protocols not already on the hard-coded block list.

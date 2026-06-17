@@ -393,6 +393,18 @@ describe('security plugin', () => {
     })
   })
 
+  describe('allowedTags', () => {
+    it('removes all other tags', async () => {
+      const tree = makeTree([
+        ['script', {}, 'evil()'],
+        ['p', {}, 'safe'],
+      ])
+      await runPlugin(tree, { allowedTags: ['p'] })
+      expect(tree.nodes).toHaveLength(1)
+      expect((tree.nodes[0] as [string, any])[0]).toBe('p')
+    })
+  })
+
   describe('prop sanitization', () => {
     it('strips event handler props', async () => {
       const tree = makeTree([['div', { onclick: 'evil()', class: 'safe' }]])

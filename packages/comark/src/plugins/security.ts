@@ -1,4 +1,5 @@
 import type { ComarkElement } from 'comark'
+import { renderMarkdown } from 'comark/render'
 import { defineComarkPlugin } from '../utils/helpers.ts'
 import { visit } from '../utils/index.ts'
 import { validateProps } from '../internal/props-validation.ts'
@@ -10,11 +11,18 @@ interface SecurityOptions extends PropsValidationOptions {
    * @default []
    */
   blockedTags?: string[]
+
+  /**
+   * Tags to allow only in the output tree.
+   * @default []
+   */
+  allowedTags?: string[]
 }
 
 export default defineComarkPlugin((options: SecurityOptions = {}) => {
   const {
     blockedTags = [],
+    allowedTags = [],
     allowedLinkPrefixes,
     allowedImagePrefixes,
     allowedProtocols,
@@ -23,6 +31,7 @@ export default defineComarkPlugin((options: SecurityOptions = {}) => {
   } = options
 
   const dropSet = new Set(blockedTags.map((t) => t.toLowerCase()))
+  const allowSet = new Set(allowedTags.map((t) => t.toLowerCase()))
 
   const propsOptions: PropsValidationOptions = {
     allowedLinkPrefixes,
@@ -40,9 +49,13 @@ export default defineComarkPlugin((options: SecurityOptions = {}) => {
         (node) => typeof node !== 'string' && node[0] !== null,
         (node) => {
           const element = node as ComarkElement
+          const tagName = element[0].toLowerCase()
+
+          const isBlocked = dropSet.has(tagName)
+          const isNotAllowed = allowSet.size > 0 && !allowSet.has(tagName)
 
           // return false to remove the node from the tree
-          if (dropSet.has(element[0].toLowerCase())) {
+          if (isBlocked || isNotAllowed) {
             return false
           }
 
