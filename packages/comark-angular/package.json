@@ -1,30 +1,25 @@
 {
-  "name": "comark",
+  "name": "@comark/angular",
   "version": "0.4.0",
-  "description": "Components in Markdown (Comark) parser with streaming support for Vue, React, Svelte, Angular and HTML",
+  "description": "Angular components for Comark",
   "keywords": [
     "angular",
+    "comark",
     "markdown",
     "mdc",
-    "parser",
-    "react",
-    "streaming",
-    "svelte",
-    "vue"
+    "renderer",
+    "streaming"
   ],
-  "homepage": "https://comark.dev",
+  "homepage": "https://comark.dev/rendering/angular",
   "bugs": {
     "url": "https://github.com/comarkdown/comark/issues"
   },
-  "license": "MIT",
-  "author": "",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/comarkdown/comark.git"
   },
   "files": [
-    "dist",
-    "skills"
+    "dist"
   ],
   "type": "module",
   "sideEffects": false,
@@ -34,9 +29,7 @@
   "exports": {
     ".": "./dist/index.js",
     "./plugins/*": "./dist/plugins/*.js",
-    "./utils": "./dist/utils/index.js",
-    "./parse": "./dist/parse.js",
-    "./render": "./dist/render.js"
+    "./utils": "./dist/utils/index.js"
   },
   "publishConfig": {
     "access": "public"
@@ -47,28 +40,25 @@
     "dev": "tsc --watch",
     "test": "vitest run",
     "prepack": "tsc",
-    "release": "release-it",
-    "release:dry": "release-it --dry-run"
+    "release": "release-it"
   },
   "dependencies": {
-    "entities": "catalog:",
-    "htmlparser2": "catalog:",
-    "js-yaml": "catalog:",
-    "markdown-exit": "catalog:"
+    "comark": "catalog:"
   },
   "devDependencies": {
-    "@json-render/core": "catalog:",
-    "@shikijs/twoslash": "catalog:",
-    "@types/js-yaml": "catalog:",
-    "@types/markdown-it": "catalog:",
-    "github-slugger": "catalog:",
-    "hast-util-to-string": "catalog:",
-    "minimark": "catalog:",
-    "tsx": "catalog:",
-    "twoslash": "catalog:",
+    "@angular/common": "catalog:",
+    "@angular/compiler": "catalog:",
+    "@angular/compiler-cli": "catalog:",
+    "@angular/core": "catalog:",
+    "@angular/platform-browser": "catalog:",
+    "@angular/platform-server": "catalog:",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
+    "@angular/common": ">=17.0.0 <22.0.0",
+    "@angular/core": ">=17.0.0 <22.0.0",
+    "@angular/platform-browser": ">=17.0.0 <22.0.0",
     "beautiful-mermaid": "catalog:",
     "katex": "catalog:",
     "shiki": "catalog:"
