@@ -77,6 +77,7 @@ const parseOptions = useLocalStorage(
     autoUnwrap: true,
     autoClose: true,
     html: true,
+    linkify: true,
   },
   { mergeDefaults: true }
 )
@@ -178,6 +179,11 @@ const parseOptionDefs = [
     label: 'HTML Parsing',
     icon: 'i-lucide-file-code',
   },
+  {
+    key: 'linkify',
+    label: 'Auto Convert urls to links',
+    icon: 'i-lucide-link',
+  },
 ] as const
 
 const activePlugins = computed<ComarkPlugin[]>(() =>
@@ -230,6 +236,7 @@ async function parseMarkdown(): Promise<void> {
       autoUnwrap: parseOptions.value.autoUnwrap,
       autoClose: parseOptions.value.autoClose,
       html: parseOptions.value.html,
+      linkify: parseOptions.value.linkify ?? true,
     })
     tree.value = result
     parseTime.value = Math.round((performance.now() - start) * 10) / 10
@@ -438,7 +445,7 @@ function handleGenerate(prompt: string) {
             />
             <div
               v-if="isGenerating && !markdown"
-              class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted bg-white dark:bg-[#1e1e1e]"
+              class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted bg-white dark:bg-[#0a0a0a]"
             >
               <UIcon
                 name="i-lucide-loader-circle"
