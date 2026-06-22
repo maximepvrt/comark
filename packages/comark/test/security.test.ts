@@ -403,6 +403,17 @@ describe('security plugin', () => {
       expect(tree.nodes).toHaveLength(1)
       expect((tree.nodes[0] as [string, any])[0]).toBe('p')
     })
+
+    it('removes all other tags', async () => {
+      const tree = makeTree([
+        ['code', {}, 'evil()'],
+        ['p', {}, 'safe'],
+      ])
+      await runPlugin(tree, { allowedTags: ['p'], unallowedFallback: 'raw' })
+      expect(tree.nodes).toHaveLength(2)
+      expect((tree.nodes[0] as [string, any])).toBe('`evil()`')
+      expect((tree.nodes[1] as [string, any])[0]).toBe('p')
+    })
   })
 
   describe('prop sanitization', () => {
