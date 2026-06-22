@@ -28,14 +28,14 @@ interface SecurityOptions extends PropsValidationOptions {
    * - function: executes a custom callback
    * @default false
    */
-  unallowedFallback?: FallbackBehavior
+  unallowedTagsFallback?: FallbackBehavior
 }
 
 export default defineComarkPlugin((options: SecurityOptions = {}) => {
   const {
     blockedTags = [],
     allowedTags = [],
-    unallowedFallback = false,
+    unallowedTagsFallback = false,
     allowedLinkPrefixes,
     allowedImagePrefixes,
     allowedProtocols,
@@ -73,15 +73,15 @@ export default defineComarkPlugin((options: SecurityOptions = {}) => {
           }
 
           if (isNotAllowed) {
-            if (unallowedFallback === 'raw') {
+            if (unallowedTagsFallback === 'raw') {
               return await renderMarkdown({ nodes: [element] })
             }
 
-            if (typeof unallowedFallback === 'function') {
-              return await unallowedFallback(element)
+            if (typeof unallowedTagsFallback === 'function') {
+              return await unallowedTagsFallback(element)
             }
 
-            if (unallowedFallback === 'textContent') {
+            if (unallowedTagsFallback === 'textContent') {
               return textContent(element)
             }
 

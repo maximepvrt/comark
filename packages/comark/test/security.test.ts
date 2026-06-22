@@ -409,7 +409,7 @@ describe('security plugin', () => {
         ['code', {}, 'evil()'],
         ['p', {}, 'safe'],
       ])
-      await runPlugin(tree, { allowedTags: ['p'], unallowedFallback: 'raw' })
+      await runPlugin(tree, { allowedTags: ['p'], unallowedTagsFallback: 'raw' })
       expect(tree.nodes).toHaveLength(2)
       expect(tree.nodes[0] as [string, any]).toBe('`evil()`')
       expect((tree.nodes[1] as [string, any])[0]).toBe('p')
