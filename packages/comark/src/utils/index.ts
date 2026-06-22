@@ -32,7 +32,11 @@ function* walkGenerator(
   tree: ComarkTree,
   checker: (node: ComarkNode) => boolean
 ): Generator<ComarkNode, void, VisitResult> {
-  function* walk(node: ComarkNode, parent: ComarkNode | ComarkNode[], index: number): Generator<ComarkNode, boolean, VisitResult> {
+  function* walk(
+    node: ComarkNode,
+    parent: ComarkNode | ComarkNode[],
+    index: number
+  ): Generator<ComarkNode, boolean, VisitResult> {
     let currentNode = node
 
     if (checker(node)) {

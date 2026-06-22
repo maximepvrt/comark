@@ -5,11 +5,7 @@ import { renderMarkdown } from 'comark/render'
 import { validateProps } from '../internal/props-validation.ts'
 import type { PropsValidationOptions } from '../internal/props-validation.ts'
 
-export type FallbackBehavior =
-  | false
-  | 'textContent'
-  | 'raw'
-  | ((element: ComarkElement) => any | Promise<any>)
+export type FallbackBehavior = false | 'textContent' | 'raw' | ((element: ComarkElement) => any | Promise<any>)
 
 interface SecurityOptions extends PropsValidationOptions {
   /**
@@ -90,7 +86,6 @@ export default defineComarkPlugin((options: SecurityOptions = {}) => {
             }
 
             return false
-            
           }
 
           const keys = Object.keys(element[1])
