@@ -139,7 +139,7 @@ Returns a `ComarkPlugin` that sanitizes the parsed AST.
 |---|---|---|---|
 | [`blockedTags`](#options-code-blockedtags) | `string[]` | `[]` | Tag names to remove entirely from the AST |
 | [`allowedTags`](#options-code-allowedtags) | `string[]` | `[]` | Tag names to allow exclusively in the AST |
-| [`unallowedTagsFallback`](#options-code-unallowedtagsfallback) | `false|'textContent'|'raw'|function` | `false`  | Defines how to handle unallowed tags in the AST |
+| [`tagFallback`](#options-code-tagfallback) | `function` | `false`  | Defines how to handle unallowed tags in the AST |
 | [`allowedProtocols`](#options-code-allowedprotocols) | `string[]` | `['*']` | Protocols permitted in `href` and `src` |
 | [`allowedLinkPrefixes`](#options-code-allowedlinkprefixes) | `string[]` | `['*']` | URL prefixes permitted in `href` |
 | [`allowedImagePrefixes`](#options-code-allowedimageprefixes) | `string[]` | `['*']` | URL prefixes permitted in `src` |
@@ -171,28 +171,20 @@ security({
 
 Tag names to exclusively keep in the AST. Matching is case-insensitive, so, so `SPAN`, `Span`, and `span` are all caught.
 
-::note
-Tags that are not present in this list will trigger the behavior defined by `unallowedTagsFallback`. Note that tags listed in `blockedTags` are always completely removed and do not trigger the fallback mechanism.
-::
-
 ```typescript
 security({
   allowedTags: ['p', 'span', 'ul', 'li', 'ol', 'strong']
 })
 ```
 
-### `unallowedTagsFallback`
+### `tagFallback`
 
-Defines the replacement strategy for tags that are filtered out because they are not present in the `allowedTags` whitelist.
-
-::warning
-This option is exclusively effective when used in combination with `allowedTags`. It has no effect on `blockedTags`, which always hard-drops nodes from the AST.
-::
+Defines the replacement strategy for tags that are filtered out because they are not present in the `allowedTags` (whitelist) or present in the `blockedTags` (blacklist).
 
 ```typescript
 security({
   allowedTags: ['p', 'span'],
-  unallowedTagsFallback: 'textContent' // Replaces unauthorized tags with their inner text
+  tagFallback: (element: ComarkElement) => 
 })
 
 ```

@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import security from '../src/plugins/security'
 import { validateProp, validateProps } from '../src/internal/props-validation'
+import { textContent } from '../src/utils/index.ts'
+import { renderMarkdown } from 'comark/render'
 import type { ComarkTree } from 'comark'
 
 // ─── validateProp ────────────────────────────────────────────────────────────
@@ -404,12 +406,23 @@ describe('security plugin', () => {
       expect((tree.nodes[0] as [string, any])[0]).toBe('p')
     })
 
-    it('removes all other tags', async () => {
+    it('text content for all other tags', async () => {
       const tree = makeTree([
         ['code', {}, 'evil()'],
         ['p', {}, 'safe'],
       ])
-      await runPlugin(tree, { allowedTags: ['p'], unallowedTagsFallback: 'raw' })
+      await runPlugin(tree, { allowedTags: ['p'], tagFallback: (e) => textContent(e)})
+      expect(tree.nodes).toHaveLength(2)
+      expect(tree.nodes[0] as [string, any]).toBe('evil()')
+      expect((tree.nodes[1] as [string, any])[0]).toBe('p')
+    })
+
+    it('raw content all other tags', async () => {
+      const tree = makeTree([
+        ['code', {}, 'evil()'],
+        ['p', {}, 'safe'],
+      ])
+      await runPlugin(tree, { allowedTags: ['p'], tagFallback: async (e) => await renderMarkdown({ nodes: [e] })})
       expect(tree.nodes).toHaveLength(2)
       expect(tree.nodes[0] as [string, any]).toBe('`evil()`')
       expect((tree.nodes[1] as [string, any])[0]).toBe('p')

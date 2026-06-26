@@ -1,11 +1,8 @@
 import type { ComarkElement } from 'comark'
 import { defineComarkPlugin } from '../utils/helpers.ts'
-import { visitAsync, textContent } from '../utils/index.ts'
-import { renderMarkdown } from 'comark/render'
+import { visitAsync } from '../utils/index.ts'
 import { validateProps } from '../internal/props-validation.ts'
 import type { PropsValidationOptions } from '../internal/props-validation.ts'
-
-export type FallbackBehavior = false | 'textContent' | 'raw' | ((element: ComarkElement) => any | Promise<any>)
 
 interface SecurityOptions extends PropsValidationOptions {
   /**
@@ -21,21 +18,17 @@ interface SecurityOptions extends PropsValidationOptions {
   allowedTags?: string[]
 
   /**
-   * Behavior when encountering an unallowed tag.
-   * - false: completely removes the node from the tree
-   * - 'textContent': keeps only the text content of the node (strips the tag)
-   * - 'raw': returns the original markdown syntax
-   * - function: executes a custom callback
-   * @default false
+   * Behavior when encountering an unallowed or blocked tag.
+   * @default undefined
    */
-  unallowedTagsFallback?: FallbackBehavior
+  tagFallback?: undefined | ((element: ComarkElement) => any | Promise<any>)
 }
 
 export default defineComarkPlugin((options: SecurityOptions = {}) => {
   const {
     blockedTags = [],
     allowedTags = [],
-    unallowedTagsFallback = false,
+    tagFallback = undefined,
     allowedLinkPrefixes,
     allowedImagePrefixes,
     allowedProtocols,
@@ -67,24 +60,12 @@ export default defineComarkPlugin((options: SecurityOptions = {}) => {
           const isBlocked = dropSet.has(tagName)
           const isNotAllowed = allowSet.size > 0 && !allowSet.has(tagName)
 
-          // return false to remove the node from the tree
-          if (isBlocked) {
-            return false
-          }
-
-          if (isNotAllowed) {
-            if (unallowedTagsFallback === 'raw') {
-              return await renderMarkdown({ nodes: [element] })
+          if (isNotAllowed || isBlocked) {
+            if (typeof tagFallback === 'function') {
+              return await tagFallback(element)
             }
 
-            if (typeof unallowedTagsFallback === 'function') {
-              return await unallowedTagsFallback(element)
-            }
-
-            if (unallowedTagsFallback === 'textContent') {
-              return textContent(element)
-            }
-
+            // return false to remove the node from the tree
             return false
           }
 
